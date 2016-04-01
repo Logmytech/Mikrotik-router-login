@@ -1,17 +1,18 @@
 import hashlib  # For calculation of MD5 hash
 import re       # Regex library
 import requests # URLlib for Humans
-#import time
+import argparse
 import sys
-from bs4 import BeautifulSoup # For scraping the value.
+#from bs4 import BeautifulSoup # For scraping the value.
 
 PY2 = sys.version_info[0] == 2 #Returns True if Python version is 2 
 
 URL = "http://10.110.210.1/"
 STATUS_URL= URL + "status"
 LOGIN_URL = URL + "login"
-USERNAME = "username"
+USERNAME = "user"
 PASSWORD = "password"
+
 
 headers = {
            'Host': '10.110.210.1',
@@ -30,10 +31,10 @@ def hexMD5ForPy2(s):
 
 
 def loginPy2():
-    ss = requests.get(LOGIN_URL)
-    s= re.search("hexMD5\(([^)]*?)\)",ss.content)
+    r = requests.get(LOGIN_URL)
+    regex_hex = re.search("hexMD5\(([^)]*?)\)",r.content)
     
-    match1 = s.group(1)
+    match1 = regex_hex.group(1)
 #   print match1
     
     match2 = match1.replace(' + document.login.password.value + ',PASSWORD).replace('\'',"").replace('\n','')
@@ -44,5 +45,28 @@ def loginPy2():
     payload = {'user': USERNAME ,'password':hexMD5ForPy2(match2),'dst':"",'popup':'true'}
     r = requests.post(LOGIN_URL,data = payload,headers = headers)
 
-if __name__ == "__main__":
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+                        '-u',
+                        '--user',
+                        help='The User name',
+                        )
+
+
+    parser.add_argument(
+                        '-p',
+                        '--password',
+                        help='The password',
+                        )
+
+    args = vars(parser.parse_args())
+    return(args)
+
+if __name__ == '__main__':
+    args = get_args()
+    if args["user"]:
+        USERNAME = args['user']
+    if args["password"]:
+        PASSWORD = args['password']
     loginPy2()
